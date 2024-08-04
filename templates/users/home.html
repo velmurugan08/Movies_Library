@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Search</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .navbar-custom {
+            background-color: #343a40; /* Dark background color */
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #ffffff; /* White text color */
+        }
+        .navbar-custom .nav-link:hover {
+            color: #f8f9fa; /* Light hover color */
+        }
+        .navbar-brand-custom {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .nav-link-custom {
+            font-size: 1.2em;
+        }
+    </style>
+    <script>
+
+window.onload = function() {
+    fetch("/movies/fetch_genre/", {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    }).then((resp) => resp.json())
+    .then((data) => {
+        // Assuming data.genre is an array of genre objects
+        const genres = data.genre;
+        
+        // Get the container element where you want to display the genres
+        const genreContainer = document.getElementById("display_genres");
+
+        // Iterate through each genre and create HTML elements to display them
+        genres.forEach(genre => {
+            const genreButton = document.createElement('a');
+            genreButton.href = `/movies/genre/${genre.id}`; // Set the link destination
+            genreButton.classList.add('btn', 'btn-primary', 'mr-2', 'mb-2');
+            genreButton.textContent = genre.name;
+            genreContainer.appendChild(genreButton);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching genres:', error);
+    });
+}
+
+        async function get_movies_by_query(event) {
+            event.preventDefault();
+            var movie_search_name = document.getElementById("movie_search_name").value
+            const resp = await fetch(`/movies/find?query=${movie_search_name}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            if (resp.ok){
+                const data = await resp.json()
+                const displayDiv = document.getElementById("display_movies");
+                    displayDiv.innerHTML = '';
+                    if (data.Search && data.Search.length > 0) {
+                        data.Search.forEach(movie => {
+                            const movieDiv = document.createElement('div');
+                            movieDiv.classList.add('card', 'mb-3');
+                            movieDiv.innerHTML = `
+                                <div class="card-body">
+                                    <h5 class="card-title">${movie.Title}</h5>
+                                    <p class="card-text">Year: ${movie.Year}</p>
+                                    <img src="${movie.Poster}" class="card-img-top" alt="${movie.Title} poster" />
+                                    <a href="/movies/movie/${movie.imdbID}" class="btn btn-primary">View details</a>
+                                </div>
+                            `;
+                            displayDiv.appendChild(movieDiv);
+                        });
+                    } else {
+                        displayDiv.innerHTML = '<h1>No movies found</h1>'
+                    }
+                } else {
+                    const data = await resp.json()
+                    window.location.href='//'
+                }
+            }
+
+        async function add_genre(event){
+            event.preventDefault()
+            var genre_name=document.getElementById('new_genre_name').value
+            var genre_type=document.getElementById('new_genre_type').checked
+            const resp = await fetch(`/movies/add_genre`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({name:genre_name,is_public:genre_type})
+            })
+            if(resp.ok) {
+                const data = await resp.json()
+                const genreContainer = document.getElementById("display_genres");
+                // Adding button
+                const genreButton = document.createElement('a');
+                genreButton.href = `/movies/genre/${data.genre.id}`; // Set the link destination
+                genreButton.classList.add('btn', 'btn-primary', 'mr-2', 'mb-2');
+                genreButton.textContent = data.genre.name;
+                genreContainer.appendChild(genreButton)
+            } else {
+                const data = await resp.json()
+                alert(data.message)
+            }
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <a class="navbar-brand navbar-brand-custom" href="#">MyWebsite</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-custom" href="/">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-custom" href="/register">Register</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <form onsubmit="get_movies_by_query(event)" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Enter movie name" id="movie_search_name" required>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form> 
+                <div id="display_genres"></div>
+                    <form onsubmit="add_genre(event)">
+                        <label>Genre Name</label>
+                        <input type="text" name="" id="new_genre_name">  
+                        <label>Is Public</label>
+                        <input type="checkbox" name="" id="new_genre_type">  
+                        <button type='submit' class="mb-3">+ Add Genre</button>  
+                    </form>
+                <div id="display_movies"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        /* Custom CSS */
+        body {
+            background-image: url('https://www.geo.tv/assets/uploads/updates/2023-01-03/462603_4381654_updates.jpg');
+            object-fit: cover;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .card {
+            width: 400px;
+            padding: 30px;
+            border-radius: 10px;
+            background-color: black;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            font-size: 24px;
+        }
+        .form-label {
+            font-weight: bold;
+            color: white;
+            opacity: 0.6;
+        }
+        .btn-login {
+            background-color: #F8DE22;
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn-login:hover {
+            background-color: #F8DE22;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 10px;
+            color: white;
+            opacity: 0.6;
+        }
+        .register-link a {
+            color: #F8DE22;
+            text-decoration: none;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body >
+    <div class="card">
+        <div class="card-header">
+            Login
+        </div>
+        <div class="card-body">
+            <form id="loginForm" onsubmit="handle_login(event)">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-login">Login</button>
+            </form>
+            <div class="register-link">
+                <p>Don't have an account? <a href="/register">Register</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Toastify JS -->
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        async function handle_login(event) {
+            event.preventDefault();
+            const resp = await fetch("/login_user", {
+                method: 'POST',
+                headers : {
+                    'Content-Type':'application/json'
+                },
+                body: JSON.stringify({
+                    'email': document.getElementById("email").value,
+                    'password': document.getElementById('password').value,
+                })
+            })
+            if (resp.ok) {
+                const data = await resp.json()
+                localStorage.setItem("token", data['token'])
+                Toastify({
+                    text: "Login successful",
+                    duration: 3000,
+                    close: true,
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                }).showToast();
+                window.location.href = '/movies'
+            } else {
+                const data = await resp.json()
+                Toastify({
+                    text: data.message || "Login failed",
+                    duration: 3000,
+                    close: true,
+                    backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                }).showToast();
+            }
+        }
+    </script>
+</body>
+</html>

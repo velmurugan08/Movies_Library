@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.Title }}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body {
+            background-color: black;
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .movie-container {
+            background-color: #333;
+            width: 100%;
+            border-radius: 5px;
+            padding: 20px;
+        }
+
+        .movie-poster {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+
+        .movie-details {
+            margin-top: 20px;
+        }
+
+        .rating-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .rating-list li {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+
+        .wish-list-btn {
+            display: block;
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ffe100;
+            color: black;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .wish-list-btn:hover {
+            background-color: #ffe100;
+            color: black;
+        }
+
+        .moviedetails h1 {
+            color: #ffe100;
+            font-weight: bold;
+        }
+
+        .moviedetails p {
+            color: white;
+            font-size: 19px;
+        }
+
+        .movie-details h2 {
+            color: #ffe100;
+            font-weight: bold;
+        }
+
+        .movie-details p {
+            color: white;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        async function add_to_genre(event) {
+            event.preventDefault();
+            var movieId = "{{ movie_id }}";
+            var genre_id = document.getElementById('genre_type').value;
+            try {
+                const resp = await fetch(`/movies/add_movie_to_genre`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ genre_id: genre_id, movie_id: movieId })
+                });
+                const data = await resp.json();
+                console.log('Response:', data);
+                if (resp.ok) {
+                    Toastify({
+                        text: data.message || "Added successfully",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                    }).showToast();
+                    setTimeout(() => {
+                        window.location.href = "/movies";
+                    }, 3000);
+                } else {
+                    Toastify({
+                        text: data.message || "Failed to add",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                    }).showToast();
+                }
+            } catch (error) {
+                console.error('Error adding to genre:', error);
+                Toastify({
+                    text: "An error occurred",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                }).showToast();
+            }
+        }
+    
+        window.onload = function () {
+            // Fetch genres
+            fetch("/movies/fetch_genre/", {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then((resp) => resp.json())
+                .then((data) => {
+                    const genres = data.genre;
+                    const genreContainer = document.getElementById("genre_type");
+                    genres.forEach(genre => {
+                        const genreButton = document.createElement('option');
+                        genreButton.textContent = genre.name;
+                        genreButton.value = genre.id;
+                        genreContainer.appendChild(genreButton);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching genres:', error);
+                });
+
+            // Fetch movie details
+            var movieId = "{{ movie_id }}";
+
+            fetch(`/movies/get_movie_by_api/${movieId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('movieTitle').textContent = data.Title;
+                    document.getElementById('moviePoster').src = data.Poster;
+                    document.getElementById('movieYear').textContent = data.Year;
+                    document.getElementById('movieRated').textContent = data.Rated;
+                    document.getElementById('movieReleased').textContent = data.Released;
+                    document.getElementById('movieRuntime').textContent = data.Runtime;
+                    document.getElementById('movieGenre').textContent = data.Genre;
+                    document.getElementById('movieDirector').textContent = data.Director;
+                    document.getElementById('movieWriter').textContent = data.Writer;
+                    document.getElementById('movieActors').textContent = data.Actors;
+                    document.getElementById('moviePlot').textContent = data.Plot;
+                    document.getElementById('movieLanguage').textContent = data.Language;
+                    document.getElementById('movieCountry').textContent = data.Country;
+                    document.getElementById('movieAwards').textContent = data.Awards;
+                    document.getElementById('imdbRating').textContent = data.imdbRating;
+                    document.getElementById('imdbVotes').textContent = data.imdbVotes;
+                    document.getElementById('boxOffice').textContent = data.BoxOffice;
+                })
+                .catch(error => {
+                    console.error('Error fetching movie details:', error);
+                });
+        };
+    </script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="movie-container row">
+            <div class="col-md-4">
+                <img id="moviePoster" src="" alt="{{ movie.Title }} poster" class="movie-poster">
+
+                <div class="movie-details">
+                    <h2>IMDb Details</h2>
+                    <p><strong>IMDb Rating:</strong> <span id="imdbRating"></span></p>
+                    <p><strong>IMDb Votes:</strong> <span id="imdbVotes"></span></p>
+                    <p><strong>Box Office:</strong> <span id="boxOffice"></span></p>
+                </div>
+                <form onsubmit="add_to_genre(event)">
+                    <select id="genre_type" style="width: 100%; height: 50px; margin-top: 10px; border-radius: 10px; padding-left: 10px;">
+                    </select>
+                    <button class="wish-list-btn font-bold">Add to wish list</button>
+                </form>
+            </div>
+            <div class="col-md-8 moviedetails">
+                <h1 id="movieTitle"></h1>
+                <p><strong>Year:</strong> <span id="movieYear"></span></p>
+                <p><strong>Rated:</strong> <span id="movieRated"></span></p>
+                <p><strong>Released:</strong> <span id="movieReleased"></span></p>
+                <p><strong>Runtime:</strong> <span id="movieRuntime"></span></p>
+                <p><strong>Genre:</strong> <span id="movieGenre"></span></p>
+                <p><strong>Director:</strong> <span id="movieDirector"></span></p>
+                <p><strong>Writer:</strong> <span id="movieWriter"></span></p>
+                <p><strong>Actors:</strong> <span id="movieActors"></span></p>
+                <p><strong>Plot:</strong> <span id="moviePlot"></span></p>
+                <p><strong>Language:</strong> <span id="movieLanguage"></span></p>
+                <p><strong>Country:</strong> <span id="movieCountry"></span></p>
+                <p><strong>Awards:</strong> <span id="movieAwards"></span></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

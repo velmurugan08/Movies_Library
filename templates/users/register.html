@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style>
+        body {
+            background-image: url('https://www.geo.tv/assets/uploads/updates/2023-01-03/462603_4381654_updates.jpg');
+            object-fit: cover;
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .register-container {
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: black;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .register-header {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        .form-group label {
+            font-weight: bold;
+            color: white;
+            opacity: 0.8;
+        }
+        .form-control {
+            border-radius: 5px;
+            padding: 20px;
+        }
+        .btn-primary {
+            margin-top: 5px;
+            background-color: #F8DE22;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            background-color: #F8DE22;
+            color: black;
+        }
+        .login-link {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: white;
+            opacity: 0.8;
+        }
+        .login-link a {
+            color: #F8DE22;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .register-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="register-container">
+            <h2 class="register-header">Register</h2>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="first_name">First Name</label>
+                    <input type="text" class="form-control" id="first_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name</label>
+                    <input type="text" class="form-control" id="last_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirm_password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Register</button>
+            </form>
+            <div class="login-link">
+                <p>Already have an account? <a href="/">Login</a></p>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#register-form').on('submit', async function(event) {
+                event.preventDefault();
+                const formData = {
+                    'first_name': $('#first_name').val(),
+                    'last_name': $('#last_name').val(),
+                    'email': $('#email').val(),
+                    'password': $('#password').val(),
+                    'confirm_password': $('#confirm_password').val()
+                };
+
+                const resp = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        // Handle form errors with Toastr
+                        for (let error in data.errors) {
+                            toastr.error(data.errors[error]);
+                        }
+                    }
+                } else {
+                    toastr.error('An error occurred. Please try again.');
+                }
+            });
+
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": true,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut"
+            };
+        });
+    </script>
+</body>
+</html>

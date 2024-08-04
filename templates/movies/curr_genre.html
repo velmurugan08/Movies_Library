@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies in {{ genre.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .navbar-custom {
+            background-color: #333;
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #ffffff;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #F8DE22;
+        }
+        .navbar-brand-custom {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .nav-link-custom {
+            font-size: 1.2em;
+        }
+        .account-icon {
+            font-size: 1.5em;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            updateNavbar();
+        }
+
+        function updateNavbar() {
+            var token = localStorage.getItem('token');
+            var navBar = document.getElementById('navbarNav');
+            var navLinks = navBar.querySelector('.navbar-nav');
+            navLinks.innerHTML = '';
+            if (token) {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom account-icon" href="/account"><i class="fas fa-user"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                `;
+            } else {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="/"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="/register"><i class="fas fa-user-plus"></i> Register</a>
+                    </li>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/movies/';
+        }
+    </script>
+</head>
+<body class="bg-black">
+    <nav class="bg-gray-800 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a class="text-2xl font-bold" href="#">DictMov</a>
+            <div id="navbarNav" class="flex items-center">
+                <ul class="navbar-nav">
+                    <!-- Navbar links will be inserted here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto mt-8">
+        <h1 class="text-3xl text-white font-bold text-center mb-8">Movies in {{ genre.name }}</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for movie in movies %}
+            <div class="movie-card bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }} poster" class="w-full h-64 object-cover">
+                <div class="p-4">
+                    <h2 class="text-xl text-white font-semibold">{{ movie.title }}</h2>
+                    <p class="text-gray-400">{{ movie.year }}</p>
+                    <p class="text-yellow-400">IMDb Rating: {{ movie.imdb_rating }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-center mt-8">
+            <a href="/movies" class="text-yellow-400 hover:underline">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>

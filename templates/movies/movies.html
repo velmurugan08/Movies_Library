@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Search</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .navbar-custom {
+            background-color: #333; /* Dark background color */
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #ffffff; /* White text color */
+        }
+        .navbar-custom .nav-link:hover {
+            color: #F8DE22; /* Light hover color */
+        }
+        .navbar-brand-custom {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .nav-link-custom {
+            font-size: 1.2em;
+        }
+        .account-icon {
+            font-size: 1.5em;
+        }
+        .searchbar{
+            padding: 1rem;
+            border-radius: 2rem;
+        }
+    </style>
+    <script>
+window.onload = function() {
+    updateNavbar();
+    fetch("/movies/fetch_genre/", {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    }).then((resp) => resp.json())
+    .then((data) => {
+        // Assuming data.genre is an array of genre objects
+        const genres = data.genre;
+        
+        // Get the container element where you want to display the genres
+        const genreContainer = document.getElementById("display_genres");
+
+        // Iterate through each genre and create HTML elements to display them
+        genres.forEach(genre => {
+            const genreButton = document.createElement('a');
+            genreButton.href = `/movies/genre/${genre.id}`; // Set the link destination
+            genreButton.classList.add('text-white', 'bg-red-400', 'mr-2', 'mb-2', 'p-4', 'rounded-lg');
+            genreButton.textContent = genre.name;
+            genreContainer.appendChild(genreButton);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching genres:', error);
+    });
+}
+
+        function updateNavbar() {
+            console.log("digfyu")
+            var token = localStorage.getItem('token');
+            var navBar = document.getElementById('navbarNav');
+            var navLinks = navBar.querySelector('.navbar-nav');
+            navLinks.innerHTML = '';
+            if (token) {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom account-icon" href="/account"><i class="fas fa-user"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                `;
+            } else {
+                navLinks.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="/"><i class="fas fa-sign-in-alt"></i> Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-custom" href="/register"><i class="fas fa-user-plus"></i> Register</a>
+                    </li>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/movies/';
+        }
+
+        async function get_movies_by_query(event) {
+            event.preventDefault();
+            var movie_search_name = document.getElementById("movie_search_name").value;
+            const resp = await fetch(`/movies/find?query=${movie_search_name}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            if (resp.ok){
+                const data = await resp.json();
+                const displayDiv = document.getElementById("display_movies");
+                displayDiv.innerHTML = '';
+                if (data.Search && data.Search.length > 0) {
+                    data.Search.forEach(movie => {
+                        const movieDiv = document.createElement('div');
+                        movieDiv.classList.add('col-md-4', 'mb-4');
+                        movieDiv.innerHTML = `
+                            <a href="/movies/movie/${movie.imdbID}">
+                                <div class="card h-100 shadow-slate-600 rounded-lg border">
+                                <img src="${movie.Poster}" class="card-img-top w-full rounded-t-lg hover:opacity-40" alt="${movie.Title} poster">
+                                <div class="card-body p-4">
+                                    <h5 class="card-title text-white">${movie.Title}</h5>
+                                    <p class="card-text text-white">Year: ${movie.Year}</p>
+                                    <a href="/movies/movie/${movie.imdbID}" class="btn btn-primary text-yellow-400">View details</a>
+                                </div>
+                            </div>
+                            </a>
+                        `;
+                        displayDiv.appendChild(movieDiv);
+                    });
+                } else {
+                    displayDiv.innerHTML = '<h1>No movies found</h1>';
+                }
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        async function add_genre(event){
+            event.preventDefault();
+            var genre_name = document.getElementById('new_genre_name').value;
+            var genre_type = document.getElementById('new_genre_type').checked;
+            const resp = await fetch(`/movies/add_genre`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type':'application/json'
+                },
+                body: JSON.stringify({name: genre_name, is_public: genre_type})
+            });
+            if(resp.ok) {
+                const data = await resp.json();
+                const genreContainer = document.getElementById("display_genres");
+                const genreButton = document.createElement('a');
+                genreButton.href = `/movies/genre/${data.genre.id}`;
+                genreButton.classList.add('text-white', 'bg-red-400', 'mr-2', 'mb-2', 'p-4',);
+                genreButton.textContent = data.genre.name;
+                genreContainer.appendChild(genreButton);
+            } else {
+                const data = await resp.json();
+                alert(data.message);
+            }
+        }
+    </script>
+</head>
+<body class="bg-black">
+    <nav class="bg-gray-800 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a class="text-2xl font-bold" href="#">DictMov</a>
+            <div id="navbarNav" class="flex items-center">
+                <ul class="navbar-nav">
+                    <!-- Navbar links will be inserted here by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mx-auto mt-8">
+        <div class="flex justify-center">
+            <div class="w-full">
+                <form onsubmit="get_movies_by_query(event)" class="mb-6">
+                    <div class="flex items-center border-b border-b-2 border-gray-300 py-3">
+                        <input type="text" class="appearance-none bg-transparent border-none w-full text-white mr-3 py-1 px-2 leading-tight focus:outline-none" placeholder="Enter movie name" id="movie_search_name" required>
+                        <button class="bg-yellow-400 text-white font-bold px-5 py-4 rounded-full focus:outline-none focus:shadow-outline search-btn" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                <h2 class="text-white text-3xl font-bold mb-2">Your Playlist</h2>
+                <div id="display_genres" class="mb-4 grid grid-cols-4 gap-2"></div>
+                <form onsubmit="add_genre(event)" class="mb-4">
+                    <div class="flex items-center justify-between">
+                        <input type="text" class="appearance-none bg-transparent border border-grey-200 rounded-lg w-1/4 text-white mr-3 py-4 px-4 leading-tight focus:outline-none" id="new_genre_name" placeholder="Genre Name">
+                        <div class="flex items-center">
+                            <input class="mr-2 leading-tight" type="checkbox" id="new_genre_type">
+                            <label class="text-sm text-white" for="new_genre_type">
+                                Is Public
+                            </label>
+                        </div>
+                        <button type="submit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 w-1/5 rounded focus:outline-none focus:shadow-outline">
+                            + Add Genre
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="display_movies" class="grid grid-cols-4 gap-5 p-5"></div>
+    </div>
+</body>
+</html>
